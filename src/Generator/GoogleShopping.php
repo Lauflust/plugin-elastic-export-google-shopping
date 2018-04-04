@@ -305,13 +305,42 @@ class GoogleShopping extends CSVPluginGenerator
             $shippingCost = '';
         }
 
+        // $UVP = $priceList['recommendedRetailPrice'] . ' ' . $priceList['currency'];
+        $country = $this->elasticExportHelper->getCountry($settings, self::ISO_CODE_2);
+        if($country == "NL")
+        {
+            $country = "CH";
+            if(strlen($priceList['price']) > 0)
+            {
+                // $_vat = $priceList['price'] / ($priceList['vatValue'] / 100 + 1);
+                // $variationPrice = number_format((float)$_vat, 2, '.', '').' '.$priceList['currency'];
+            
+                // $_shippingCost = $this->elasticExportHelper->getShippingCost($variation['data']['item']['id'], $settings);
+                if($_vat < 100) { $shippingCost = '10.08' . ' ' . $priceList['currency']; }
+                else $shippingCost = '0.00' . ' ' . $priceList['currency'];
+            }
+        }
+
         if(strlen($shippingCost) == 0)
         {
-            $shipping = '';
+            // $shipping = '';
+            if($country != 'DE')
+            {
+                if($priceList['price'] < 100) { $shippingCost = '12.00' . ' ' . $priceList['currency']; }
+                else { $shippingCost = '0.00' . ' ' . $priceList['currency']; }
+            }
+            else
+            {
+                if($priceList['price'] < 20) { $shippingCost = '4.99' . ' ' . $priceList['currency']; }
+                else { $shippingCost = '0.00' . ' ' . $priceList['currency']; }
+            }
+          
+            $shipping = $country.':::'.$shippingCost;
         }
         else
         {
-            $shipping = $this->elasticExportHelper->getCountry($settings, self::ISO_CODE_2).':::'.$shippingCost;
+            // $shipping = $this->elasticExportHelper->getCountry($settings, self::ISO_CODE_2).':::'.$shippingCost;
+            $shipping = $country.':::'.$shippingCost;
         }
 
         $basePriceComponents = $this->priceHelper->getBasePriceComponents($variation);
@@ -361,7 +390,7 @@ class GoogleShopping extends CSVPluginGenerator
             'custom_label_2'			=> $this->elasticExportPropertyHelper->getProperty($variation, self::CHARACTER_TYPE_CUSTOM_LABEL_2, self::GOOGLE_SHOPPING, $settings->get('lang')),
             'custom_label_3'			=> $this->elasticExportPropertyHelper->getProperty($variation, self::CHARACTER_TYPE_CUSTOM_LABEL_3, self::GOOGLE_SHOPPING, $settings->get('lang')),
             'custom_label_4'			=> $this->elasticExportPropertyHelper->getProperty($variation, self::CHARACTER_TYPE_CUSTOM_LABEL_4, self::GOOGLE_SHOPPING, $settings->get('lang')),
-			'availability_​date'			=> $this->elasticExportHelper->getReleaseDate($variation),
+			'availability_​date'		 => '', // $this->elasticExportHelper->getReleaseDate($variation),
         ];
 
         $this->addCSVContent(array_values($data));
